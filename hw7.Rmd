@@ -1,0 +1,150 @@
+---
+title: "PYSC 800 hw 7"
+author: "Xiaohong Cai"
+output:
+  prettydoc::html_pretty:
+    theme: cayman
+    highlight: github
+---
+
+```{r}
+library(tidyverse)
+library(dplyr)
+```
+
+```{r}
+couples<-readRDS(file = "C:/Users/kubsadmin/OneDrive/course/psy800-ds-foudation/week10/couples.rds")
+couples
+```
+# Question 1
+The life satisfaction rating for the "partner" 026 are 0.26 (the member with a chronic illness) and 0.71 (the member without a chronic illness).
+```{r}
+couples[couples$couple=="026",]
+```
+
+# Question 2
+```{r}
+couples <- couples %>% 
+  separate(col=satisfaction,
+           into=c("index","partner"),
+           sep=";",
+           convert=TRUE
+           ) %>% 
+  print()
+```
+
+# Question 3
+```{r}
+couples_longer <- couples %>% 
+  pivot_longer(cols = c(index,partner),
+              names_to = "member",
+              values_to = "satisfaction") %>% 
+  print()
+```
+
+# Question 4
+```{r}
+couples_longer <- couples_longer %>% 
+  unite(col="id",
+        couple,
+        member,
+        sep = "_",
+        remove=FALSE) %>% 
+  print()
+```
+
+# Question 5
+```{r}
+library(ggplot2)
+ggplot(data=couples_longer, aes(x=member,y=satisfaction))+
+  geom_violin()
+```
+# Optional Bonus Question
+
+```{r}
+couples_longer$member =factor(couples_longer$member )
+
+library(ggplot2)
+ggplot(data=couples_longer, aes(x=member,y=satisfaction,group =couple))+
+  geom_line(alpha = 0.2, color= "blue",cex=1.5)+
+  geom_point(alpha = 0.5,cex=1.5)
+
+```
+
+# Question 6
+```{r}
+#install.packages("Lahman")
+```
+```{r}
+library(Lahman)
+```
+
+```{r}
+People_t = as_tibble(People)
+Salaries_t = as_tibble(Salaries)
+```
+
+```{r}
+People_t
+```
+
+```{r}
+Archers <- People_t[People_t$nameLast=="Archer",c("playerID", "nameFirst", "nameLast", "debut")] %>% 
+    print()
+```
+```{r}
+Archers <- People[People$nameLast=="Archer",c("playerID", "nameFirst", "nameLast", "debut")] %>% 
+    print()
+```
+# Question 7
+```{r}
+Salaries_t
+```
+```{r}
+Archers %>% inner_join(Salaries_t,
+                      by="playerID"
+                      ) %>% 
+  print()
+```
+
+# Question 8
+Full join is not really helpful. Because there are only 4 players in the Archers tibble. And there are thousands rows in the salaries tibble. So if we do the full join, the column such as debut will have a lot of missing values. 
+
+# Question 9
+```{r}
+table2 %>% pivot_wider(
+  names_from = "type",
+  values_from = "count"
+) %>% print()
+```
+
+# Question 10
+```{r}
+customers <- tibble(
+  id = 1:4, 
+  name = c("Bennie Factor", "Joe King", "Jack Pott", "Kay Oss")
+)
+
+sales <- tibble(
+  date = c("01/10", "01/10", "01/15", "01/19", "01/22", "01/23"),
+  customer = c(1, 3, 5, 3, 3, 1),
+  amount = c(120.78, 224.31, 133.84, 201.22, 263.72, 199.84)
+)
+```
+
+```{r}
+customers
+```
+
+```{r}
+sales
+```
+
+```{r}
+inner_join(
+  x = sales, 
+  y = customers, 
+  by = c("customer"="id")
+)
+```
+
