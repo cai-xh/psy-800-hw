@@ -1,0 +1,160 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+plos_title = readRDS("C:/Users/kubsadmin/OneDrive/course/psy800-ds-foudation/plos_title.rds")
+names(plos_title) = c("title")
+plos_title
+```
+
+```{r}
+science_title = read.csv("C:/Users/kubsadmin/OneDrive/course/psy800-ds-foudation/science_title.csv", stringsAsFactors = FALSE)
+names(science_title) = c("num", "title", "year")
+science_title
+```
+
+#build corpus
+```{r}
+#install.packages("tm")
+library(tm)
+```
+
+## science
+```{r}
+corpus_sic_til = Corpus(VectorSource(science_title$title))
+inspect(corpus_sic_til[1:5])
+```
+##plos one
+
+Randomly select 3000 rows
+```{r}
+plos_title_rand= as.data.frame(plos_title[sample(nrow(plos_title),24000),],stringsAsFactors = FALSE)
+names(plos_title_rand)="title"
+plos_title_rand
+```
+
+```{r}
+corpus_plos_til = Corpus(VectorSource(plos_title_rand$title))
+inspect(corpus_plos_til[1:5])
+```
+
+# Clean text
+## Sicence
+```{r} 
+corpus_sic_til = tm_map(corpus_sic_til, tolower) 
+corpus_sic_til = tm_map(corpus_sic_til, removePunctuation) 
+corpus_sic_til = tm_map(corpus_sic_til, removeNumbers) 
+corpus_sic_til = tm_map(corpus_sic_til, removeWords, stopwords('english'))
+corpus_sic_til = tm_map(corpus_sic_til, stripWhitespace)
+inspect(corpus_sic_til[1:20])
+```
+
+##plos one
+```{r} 
+corpus_plos_til = tm_map(corpus_plos_til, tolower) 
+corpus_plos_til = tm_map(corpus_plos_til, removePunctuation) 
+corpus_plos_til = tm_map(corpus_plos_til, removeNumbers) 
+corpus_plos_til = tm_map(corpus_plos_til, removeWords, stopwords('english'))
+corpus_plos_til = tm_map(corpus_plos_til, stripWhitespace)
+inspect(corpus_plos_til[1:20])
+```
+
+
+# Term document matrix
+## Sicence
+```{r}
+tdm_sci = TermDocumentMatrix(corpus_sic_til)
+tdm_sci <- as.matrix(tdm_sci)
+tdm_sci[1:5,1:10]
+```
+
+
+
+```{r}
+row_sci = rowSums(tdm)
+row_sci = subset(row_sci,row_sci>200)
+row_sci
+```
+
+```{r}
+barplot(row_sci, las = 2)
+```
+## plos one
+
+```{r}
+tdm_plos = TermDocumentMatrix(corpus_plos_til)
+tdm_plos <- as.matrix(tdm_plos)
+tdm_plos[1:5,1:10]
+```
+
+
+
+```{r}
+row_plos = rowSums(tdm_plos)
+row_plos = subset(row_plos,row_plos>200)
+row_plos
+```
+
+# Word cloud
+```{r}
+#install.packages("wordcloud")
+library(wordcloud)
+```
+
+## science
+```{r}
+row_sci = sort(rowSums(tdm_sci),decreasing= TRUE)
+row_sci = subset(row_sci,row_sci>150)
+set.seed(867)
+wordcloud(words = names(row_sci),freq =row_sci)
+```
+## plos one
+```{r}
+row_plos = sort(rowSums(tdm_plos),decreasing= TRUE)
+row_plos = subset(row_plos,row_plos>400)
+set.seed(867)
+wordcloud(words = names(row_plos),freq =row_plos)
+```
+# sentiment analysis
+```{r}
+#install.packages(c("syuzhet"))
+library(syuzhet)
+library(lubridate)
+library(ggplot2)
+library(dplyr)
+library(scales)
+library(reshape2)
+```
+## science
+```{r}
+corpus_sic_til_sent = science_title$title
+corpus_sic_til_sent[1:5]
+```
+
+
+```{r}
+sci_s = get_nrc_sentiment(corpus_sic_til_sent)
+head(sci_s)
+```
+bar plot
+```{r}
+barplot(colSums(sci_s),las= 2)
+```
+
+## plos one
+```{r}
+corpus_plos_til_sent = plos_title_rand$title
+corpus_plos_til_sent[1:5]
+```
+
+
+```{r}
+plos_s = get_nrc_sentiment(corpus_plos_til_sent)
+head(plos_s)
+```
+bar plot
+```{r}
+barplot(colSums(plos_s),las= 2)
+```
