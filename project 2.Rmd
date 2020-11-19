@@ -1,0 +1,281 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+```{r}
+#install.packages("httr")
+library(httr)
+
+#install.packages("rvest")
+library(rvest)
+
+library(dplyr)
+```
+# `read_html()` :Create an html document (or the source codes) from a url
+# `html_nodes()`: Selects parts of a document using CSS selector (SelectorGadeget Chrom extention)
+
+# Science
+
+get science link by years
+```{r}
+sic_link_year= 99
+year=2020
+year_range=10
+
+for (i in 1:year_range) {
+  sic_link_year[i] = paste("https://science.sciencemag.org/content/by/year",year,sep="/")
+  year = year -1
+}
+
+sic_link_year
+```
+get science link by vio and iss number
+
+```{r}
+sic_link_vio_iss = NULL
+
+
+for (i in 1:length(sic_link_year)){
+  sic_vio_iss=read_html(sic_link_year[i])
+  sic_vio_iss = sic_vio_iss %>% 
+  html_nodes(".media--priority-2") %>% 
+  html_text()
+  
+  vol = substr(sic_vio_iss,5,7)
+  iss = substr(sic_vio_iss,14,18)
+  
+  link = as.data.frame(
+    paste("https://science.sciencemag.org/content",vol,iss,sep="/"),stringsAsFactors = FALSE)
+  
+  link$year = 2020-i+1
+  
+  sic_link_vio_iss =  rbind(sic_link_vio_iss,link)
+}
+
+sic_link_vio_iss
+```
+
+
+get the titles
+```{r}
+length(sic_link_vio_iss[,2])
+```
+
+
+```{r}
+science_title = NULL
+science_authors = NULL
+
+
+for (i in 1:length(sic_link_vio_iss[,2])){
+  
+  plos_page_info=read_html(sic_link_vio_iss[i,1])
+  
+    title = plos_page_info %>% 
+    html_nodes(".media__headline__title") %>% 
+    html_text() %>% 
+    as.data.frame(stringsAsFactors = FALSE)
+    
+    title$year = sic_link_vio_iss[i,2]
+    
+    authors = plos_page_info %>% 
+    html_nodes(".byline") %>% 
+    html_text() %>% 
+    as.data.frame(stringsAsFactors = FALSE)
+    
+   authors$link =  sic_link_vio_iss[i,1]
+  
+  science_title = rbind(science_title, title)
+  science_authors = rbind(science_authors, authors)
+  
+}
+
+#science_all = cbind(science_title, science_authors)
+
+```
+
+```{r}
+write.csv(science_title, file="C:/Users/kubsadmin/OneDrive/course/psy800-ds-foudation/science_title.csv")
+```
+
+
+# plos one
+get plos one link by pages
+```{r}
+plos_link_page= NULL
+page= 1
+
+page_range = 18620
+
+for (i in 1:page_range) {
+  plos_link_page[i] = paste("https://journals.plos.org/plosone/browse?resultView=list&page=",page,sep="")
+  page = page +1
+}
+
+plos_link_page = as.data.frame(plos_link_page,stringsAsFactors = FALSE)
+plos_link_page
+```
+
+```{r}
+desired_length<-NULL
+desired_length <- 18620 # or whatever length you want
+plos_page_info <- vector(mode = "list", length = desired_length)
+plos_page_info[[1]]
+```
+
+```{r}
+
+for (i in 1:2000){
+plos_page_info[[i]]=read_html(plos_link_page[i,1])
+}
+plos_page_info
+```
+```{r}
+#install.packages(c("doSNOW","foreach"))
+library(doSNOW)
+library(foreach)
+```
+```{r}
+time = proc.time()
+library(doSNOW)
+library(foreach)
+cluster = makeCluster(14, type = "SOCK")
+registerDoSNOW(cluster)
+
+for (i in 2001:4000){
+plos_page_info[[i]]=read_html(plos_link_page[i,1])
+}
+#plos_page_info
+
+print(proc.time()-time)
+stopCluster(cluster)
+```
+
+
+
+```{r}
+time = proc.time()
+for (i in 4001:6000){
+plos_page_info[[i]]=read_html(plos_link_page[i,1])
+}
+print(proc.time()-time)
+```
+
+```{r}
+time = proc.time()
+for (i in 6001:8000){
+plos_page_info[[i]]=read_html(plos_link_page[i,1])
+}
+print(proc.time()-time)
+```
+
+```{r}
+time = proc.time()
+for (i in 8001:10000){
+plos_page_info[[i]]=read_html(plos_link_page[i,1])
+}
+print(proc.time()-time)
+```
+
+```{r}
+time = proc.time()
+for (i in 10001:12000){
+plos_page_info[[i]]=read_html(plos_link_page[i,1])
+}
+print(proc.time()-time)
+```
+
+```{r}
+time = proc.time()
+for (i in 12001:14000){
+plos_page_info[[i]]=read_html(plos_link_page[i,1])
+}
+print(proc.time()-time)
+
+```
+
+```{r}
+time = proc.time()
+for (i in 14001:16000){
+plos_page_info[[i]]=read_html(plos_link_page[i,1])
+}
+print(proc.time()-time)
+```
+
+```{r}
+time = proc.time()
+for (i in 16001:18620){
+plos_page_info[[i]]=read_html(plos_link_page[i,1])
+}
+print(proc.time()-time)
+```
+
+```{r}
+#write.csv(plos_page_info, file="C:/Users/kubsadmin/OneDrive/course/psy800-ds-foudation/plos_page_info.csv")
+saveRDS(plos_page_info, file="C:/Users/kubsadmin/OneDrive/course/psy800-ds-foudation/plos_page_info.rds")
+```
+
+
+
+```{r}
+time = proc.time()
+
+plos_title = NULL
+plos_year = NULL
+plos_authors = NULL
+plos_citation = NULL
+
+for (i in 1:length(plos_page_info)){
+  
+  #plos_page_info[i]=read_html(plos_link_page[i,1])
+  
+    title = plos_page_info[[i]] %>% 
+    html_nodes(".list-title") %>% 
+    html_text() %>% 
+    as.data.frame(stringsAsFactors = FALSE)
+    
+    year = plos_page_info[[i]]  %>% 
+    html_nodes(".date") %>% 
+    html_text() %>% 
+    as.data.frame(stringsAsFactors = FALSE)  
+    
+    authors = plos_page_info[[i]]  %>% 
+    html_nodes(".authors") %>% 
+    html_text() %>% 
+    as.data.frame(stringsAsFactors = FALSE)  
+  
+    citation = plos_page_info[[i]] %>% 
+    html_nodes(".search-results-alm") %>% 
+    html_text() %>% 
+    as.data.frame(stringsAsFactors = FALSE)
+    
+     
+    plos_title = rbind(plos_title, title)
+    plos_year= rbind(plos_year,year)
+    plos_authors = rbind(plos_authors, authors)
+    plos_citation = rbind(plos_citation,citation)
+  }
+print(proc.time()-time)
+
+```
+
+```{r}
+plos_all = cbind(plos_year,plos_authors,plos_citation)
+plos_all
+```
+
+```{r}
+plos_title
+```
+
+```{r}
+write.csv(plos_title, file="C:/Users/kubsadmin/OneDrive/course/psy800-ds-foudation/plos_title.csv")
+saveRDS(plos_title, file="C:/Users/kubsadmin/OneDrive/course/psy800-ds-foudation/plos_title.rds")
+```
+
+```{r}
+write.csv(plos_all, file="C:/Users/kubsadmin/OneDrive/course/psy800-ds-foudation/plos_all.csv")
+saveRDS(plos_all, file="C:/Users/kubsadmin/OneDrive/course/psy800-ds-foudation/plos_all.rds")
+```
